@@ -77,42 +77,30 @@ jobs:
   deploy:
     needs: build
     runs-on: self-hosted
-
     steps:
-      - name: Checkout master branch
+      - name: Checkout master
         uses: actions/checkout@v4
         with:
           ref: master
 
-      - name: Deploy using Podman
-        uses: appleboy/ssh-action@v1
-        with:
-          debug: true
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "🛰 Подключено к серверу: запускаю деплой"
+      - name: Deploy with Podman
+        run: |
+          echo "🛰 Запускаю деплой на self-hosted runner’e"
 
-            # Авторизация в Docker Hub
-            podman login -u ${{ vars.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }} docker.io
+          # Логинимся в Docker Hub
+          podman login -u ${{ vars.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }} docker.io
 
-            # Проверка запущенных контейнеров
-            echo "📦 Существующие контейнеры:"
-            podman ps -a
+          # Останавливаем старый контейнер и удаляем
+          podman stop python-crud || true
+          podman rm python-crud || true
 
-            # Остановка и удаление текущего
-            podman stop python-crud || true
-            podman rm python-crud || true
+          # Удаляем старый образ
+          podman rmi ${{ env.IMAGE_NAME }} || true
 
-            # Удаление старого образа
-            podman rmi ${{ env.IMAGE_NAME }} || true
+          # Подтягиваем свежий образ
+          podman pull ${{ env.IMAGE_NAME }}
 
-            # Загрузка нового
-            podman pull ${{ env.IMAGE_NAME }}
+          # Запускаем новый контейнер
+          podman run -d --name python-crud --network host ${{ env.IMAGE_NAME }}
 
-            # Запуск
-            podman run -d --name python-crud --network host ${{ env.IMAGE_NAME }}
-
-            echo "✅ Деплой завершён успешно!"
+          echo "✅ Деплой завершён успешно!"
