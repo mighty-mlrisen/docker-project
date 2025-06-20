@@ -91,7 +91,7 @@ jobs:
 
           # Stop and remove existing container if it exists
           podman stop python-crud || true
-          podman rm python-crud || true
+          podman rm --force python-crud || true
 
           # Remove existing image if it exists
           podman rmi ${{ env.IMAGE_NAME }} || true
