@@ -8,4 +8,3 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, auto_increment=True)
     name: Mapped[str]
-
