@@ -49,6 +49,7 @@ jobs:
 
 
   build:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -104,4 +105,3 @@ jobs:
           podman run -d --name python-crud --network host ${{ env.IMAGE_NAME }}
 
           echo "✅ Деплой завершён успешно!"
-
